@@ -16,11 +16,18 @@ public class PlayerPatcher : IScriptMod
 			t=>t is IdentifierToken {Name: "prop"},
 			t=>t.Type is TokenType.CfIf
 		], allowPartialMatch: true);
-		MultiTokenWaiter createPropWaiterEnd = new MultiTokenWaiter([
+		MultiTokenWaiter createPropWaiterMiddle = new MultiTokenWaiter([
 			t=>t is IdentifierToken {Name: "prop"},
 			t=>t is IdentifierToken {Name: "prop"},
 			t=>t is IdentifierToken {Name: "ref"},
 			t=>t.Type is TokenType.Colon,
+			t=>t.Type is TokenType.Colon
+		], allowPartialMatch: true);
+		MultiTokenWaiter createPropWaiterEnd = new MultiTokenWaiter([
+			t=>t is IdentifierToken {Name: "prop"},
+			t=>t is IdentifierToken {Name: "prop"},
+			t=>t is IdentifierToken {Name: "prop_ids"},
+			t=>t is IdentifierToken {Name: "size"},
 			t=>t.Type is TokenType.Colon
 		], allowPartialMatch: true);
 
@@ -35,10 +42,16 @@ public class PlayerPatcher : IScriptMod
 				yield return new Token(TokenType.OpAnd);
 				yield return new Token(TokenType.ParenthesisOpen);
 			}
-			else if (createPropWaiterEnd.Check(token))
+			else if (createPropWaiterMiddle.Check(token))
 			{
 				Mod.instance.logger.Information("found end");
 				yield return new Token(TokenType.ParenthesisClose);
+				yield return token;
+			}
+			else if (createPropWaiterEnd.Check(token))
+			{
+				yield return new Token(TokenType.OpAnd);
+				yield return new ConstantToken(new BoolVariant(false));
 				yield return token;
 			}
 			else yield return token;
